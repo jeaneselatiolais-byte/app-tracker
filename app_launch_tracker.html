@@ -1,0 +1,593 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary);font-size:13px}
+.shell{display:flex;flex-direction:column;min-height:600px}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary)}
+.logo{font-weight:500;font-size:14px;flex:1}
+.logo span{color:var(--color-text-secondary);font-weight:400;font-size:12px;margin-left:6px}
+.btn{cursor:pointer;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:6px 12px;font-size:12px;font-family:var(--font-sans);background:var(--color-background-primary);color:var(--color-text-primary);transition:background 0.15s}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:var(--color-background-info);border-color:var(--color-border-info);color:var(--color-text-info)}
+.btn-primary:hover{opacity:0.85}
+.btn-sm{padding:4px 9px;font-size:11px}
+.body{display:flex;flex:1;gap:0;min-height:0}
+.sidebar{width:200px;flex-shrink:0;border-right:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);display:flex;flex-direction:column}
+.sidebar-label{font-size:10px;color:var(--color-text-tertiary);padding:10px 12px 4px;letter-spacing:0.08em;text-transform:uppercase}
+.proj-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-left:2px solid transparent;transition:all 0.12s}
+.proj-item:hover{background:var(--color-background-secondary)}
+.proj-item.active{background:var(--color-background-info);border-left-color:var(--color-text-info)}
+.proj-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.proj-info{flex:1;min-width:0}
+.proj-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj-item.active .proj-name{color:var(--color-text-info)}
+.proj-pct{font-size:10px;color:var(--color-text-tertiary)}
+.proj-del{opacity:0;background:none;border:none;cursor:pointer;color:var(--color-text-danger);font-size:12px;padding:2px 4px;border-radius:4px;flex-shrink:0}
+.proj-item:hover .proj-del{opacity:1}
+.sidebar-empty{padding:12px;font-size:11px;color:var(--color-text-tertiary);text-align:center;line-height:1.5}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+.modal-wrap{display:none;padding:16px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary)}
+.modal-wrap.open{display:block}
+.modal-title{font-size:14px;font-weight:500;margin-bottom:12px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-label{font-size:10px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.07em}
+.form-input{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 9px;font-size:12px;font-family:var(--font-sans);background:var(--color-background-primary);color:var(--color-text-primary);outline:none;width:100%}
+.form-input:focus{border-color:var(--color-border-info)}
+.color-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.cswatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;flex-shrink:0}
+.cswatch.sel{border-color:var(--color-text-primary)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+
+.checklist-area{flex:1;overflow-y:auto;padding:14px}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:8px;color:var(--color-text-secondary);text-align:center}
+.empty-state h3{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.empty-state p{font-size:12px;max-width:260px;line-height:1.5}
+
+.proj-header{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;margin-bottom:10px}
+.proj-header-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.proj-header-name{font-size:16px;font-weight:500;flex:1}
+.proj-meta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.proj-meta-item{display:flex;flex-direction:column;gap:1px}
+.proj-meta-label{font-size:9px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.07em}
+.proj-meta-val{font-size:11px;font-weight:500;font-family:var(--font-mono);color:var(--color-text-info)}
+.prog-row{display:flex;align-items:center;gap:8px}
+.prog-track{flex:1;height:4px;background:var(--color-border-tertiary);border-radius:100px;overflow:hidden}
+.prog-fill{height:100%;background:var(--color-text-info);border-radius:100px;transition:width 0.3s}
+.prog-lbl{font-size:11px;color:var(--color-text-secondary);font-family:var(--font-mono);white-space:nowrap}
+.next-banner{margin-top:8px;background:var(--color-background-warning);border-radius:var(--border-radius-md);padding:6px 10px;font-size:11px;color:var(--color-text-warning);display:flex;align-items:flex-start;gap:6px;border:0.5px solid var(--color-border-warning)}
+
+.phase{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:8px;overflow:hidden}
+.phase-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;user-select:none}
+.phase-hdr:hover{background:var(--color-background-secondary)}
+.phase-num{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--font-mono);background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);flex-shrink:0}
+.phase-num.done{background:var(--color-background-success);color:var(--color-text-success);border-color:var(--color-border-success)}
+.phase-titles{flex:1}
+.phase-title{font-size:12px;font-weight:500}
+.phase-sub{font-size:10px;color:var(--color-text-tertiary);margin-top:1px}
+.phase-meta{font-size:10px;color:var(--color-text-tertiary);font-family:var(--font-mono)}
+.phase-chev{font-size:10px;color:var(--color-text-tertiary);transition:transform 0.2s}
+.phase.closed .phase-chev{transform:rotate(-90deg)}
+.phase.closed .phase-body{display:none}
+.phase-body{border-top:0.5px solid var(--color-border-tertiary)}
+.sec-label{font-size:9px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.08em;padding:8px 12px 3px;border-top:0.5px solid var(--color-border-tertiary)}
+.sec-label:first-child{border-top:none}
+
+.task{display:flex;gap:9px;padding:6px 12px;align-items:flex-start;border-bottom:0.5px solid var(--color-border-tertiary);transition:background 0.1s;position:relative}
+.task:last-child{border-bottom:none}
+.task:hover{background:var(--color-background-secondary)}
+.task:hover .note-btn{opacity:1}
+.chk{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:1px;background:var(--color-background-primary);transition:all 0.15s}
+.task.done .chk{background:var(--color-background-success);border-color:var(--color-border-success)}
+.chk-mark{display:none;color:var(--color-text-success);font-size:10px;font-weight:700}
+.task.done .chk-mark{display:block}
+.task-body{flex:1;min-width:0}
+.task-txt{font-size:12px;line-height:1.4}
+.task.done .task-txt{color:var(--color-text-tertiary);text-decoration:line-through}
+.task-hint{font-size:10px;color:var(--color-text-tertiary);margin-top:2px;line-height:1.4}
+.tag{display:inline-block;font-size:9px;font-family:var(--font-mono);padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle}
+.tag-apple{background:var(--color-background-info);color:var(--color-text-info)}
+.tag-github{color:#6b3fa0;background:#f0ebf9}
+.tag-gmail{background:var(--color-background-warning);color:var(--color-text-warning)}
+.tag-social{background:var(--color-background-danger);color:var(--color-text-danger)}
+.tag-legal{background:var(--color-background-danger);color:var(--color-text-danger)}
+.note-btn{opacity:0;background:none;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary);cursor:pointer;font-size:10px;padding:2px 7px;border-radius:4px;transition:all 0.12s;font-family:var(--font-sans);white-space:nowrap;flex-shrink:0;margin-top:1px}
+.note-btn:hover{background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info)}
+.note-btn.has{opacity:1;background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info)}
+.note-area{display:none;margin-top:5px}
+.note-area.open{display:block}
+.note-input{width:100%;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:5px 7px;font-size:11px;font-family:var(--font-mono);color:var(--color-text-primary);background:var(--color-background-secondary);resize:vertical;min-height:52px;outline:none}
+.note-input:focus{border-color:var(--color-border-info)}
+.note-saved{display:none;font-size:10px;font-family:var(--font-mono);color:var(--color-text-info);background:var(--color-background-info);border-radius:3px;padding:3px 6px;margin-top:3px;word-break:break-word;line-height:1.4}
+.note-saved.vis{display:block}
+
+.ai-panel{border-top:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);display:flex;flex-direction:column}
+.ai-hdr{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.ai-dot{width:7px;height:7px;border-radius:50%;background:var(--color-text-success);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.ai-hdr-title{font-size:12px;font-weight:500;flex:1}
+.ai-hdr-sub{font-size:10px;color:var(--color-text-tertiary)}
+.ai-msgs{height:180px;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.ai-msg{display:flex;flex-direction:column;gap:2px}
+.ai-lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-tertiary)}
+.ai-msg.me .ai-lbl{text-align:right}
+.ai-bubble{padding:7px 10px;border-radius:var(--border-radius-lg);font-size:11px;line-height:1.55;max-width:88%}
+.ai-msg.me .ai-bubble{background:var(--color-background-info);color:var(--color-text-info);border-bottom-right-radius:3px;align-self:flex-end;border:0.5px solid var(--color-border-info)}
+.ai-msg.ai .ai-bubble{background:var(--color-background-success);color:var(--color-text-success);border-bottom-left-radius:3px;border:0.5px solid var(--color-border-success)}
+.ai-quick{display:flex;flex-wrap:wrap;gap:4px;padding:6px 14px}
+.qbtn{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary);padding:3px 8px;border-radius:100px;font-size:10px;cursor:pointer;font-family:var(--font-sans);transition:all 0.12s;white-space:nowrap}
+.qbtn:hover{background:var(--color-background-success);color:var(--color-text-success);border-color:var(--color-border-success)}
+.ai-input-row{display:flex;gap:6px;padding:8px 14px;border-top:0.5px solid var(--color-border-tertiary)}
+.ai-inp{flex:1;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:6px 9px;font-size:11px;font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-secondary);outline:none;resize:none}
+.ai-inp:focus{border-color:var(--color-border-success)}
+.ai-send{background:var(--color-background-success);border:none;color:var(--color-text-success);width:30px;height:30px;border-radius:var(--border-radius-md);cursor:pointer;font-size:14px;font-weight:500;flex-shrink:0;border:0.5px solid var(--color-border-success)}
+.ai-send:hover{opacity:0.8}
+.ai-send:disabled{opacity:0.4;cursor:not-allowed}
+.typing{display:none;align-items:center;gap:3px;padding:7px 10px;background:var(--color-background-success);border-radius:var(--border-radius-lg);border-bottom-left-radius:3px;border:0.5px solid var(--color-border-success);width:fit-content}
+.typing.vis{display:flex}
+.tdot{width:4px;height:4px;border-radius:50%;background:var(--color-text-success);animation:tdot 1.2s infinite}
+.tdot:nth-child(2){animation-delay:.2s}
+.tdot:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-3px);opacity:1}}
+</style>
+
+<div class="shell">
+
+<div class="topbar">
+  <div class="logo">AppLaunch Tracker <span id="globalStat">0 projects</span></div>
+  <button class="btn btn-primary" onclick="openModal()">+ New App</button>
+</div>
+
+<div class="modal-wrap" id="modalWrap">
+  <div class="modal-title" id="modalTitle">New App Project</div>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">App Name *</label>
+      <input class="form-input" id="fName" placeholder="e.g. MoodTracker" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bundle ID</label>
+      <input class="form-input" id="fBundle" placeholder="com.company.appname" />
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">GitHub Username</label>
+      <input class="form-input" id="fGithub" placeholder="your-username" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">App Gmail</label>
+      <input class="form-input" id="fGmail" placeholder="appname@gmail.com" />
+    </div>
+  </div>
+  <div class="form-group" style="margin-bottom:10px">
+    <label class="form-label">Color</label>
+    <div class="color-row" id="colorRow"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-sm" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-sm btn-primary" id="modalSave" onclick="saveProject()">Create Project</button>
+  </div>
+</div>
+
+<div class="body">
+  <div class="sidebar">
+    <div class="sidebar-label">Your Apps</div>
+    <div id="projList"><div class="sidebar-empty">No apps yet.<br>Click "+ New App" to begin.</div></div>
+  </div>
+  <div class="main">
+    <div class="checklist-area" id="checklistArea">
+      <div class="empty-state" id="emptyState">
+        <h3>Select or create an app</h3>
+        <p>Each app gets its own independent checklist, progress tracking, and notes.</p>
+        <button class="btn btn-primary" style="margin-top:8px" onclick="openModal()">+ Create your first app</button>
+      </div>
+      <div id="clContent" style="display:none"></div>
+    </div>
+    <div class="ai-panel">
+      <div class="ai-hdr">
+        <div class="ai-dot"></div>
+        <div class="ai-hdr-title">Launch Assistant</div>
+        <div class="ai-hdr-sub">Ask anything about your app launch</div>
+      </div>
+      <div class="ai-msgs" id="aiMsgs">
+        <div class="ai-msg ai"><div class="ai-lbl">Assistant</div><div class="ai-bubble">Hi! I'm your App Launch Assistant. Create a project and I'll help you navigate every phase — naming, GitHub Pages, App Store Connect, social media setup, and more. Ask me anything!</div></div>
+      </div>
+      <div class="ai-quick">
+        <button class="qbtn" onclick="qp('What should I do first?')">What first?</button>
+        <button class="qbtn" onclick="qp('Explain the Bundle ID format')">Bundle ID?</button>
+        <button class="qbtn" onclick="qp('How do I set up GitHub Pages?')">GitHub Pages?</button>
+        <button class="qbtn" onclick="qp('What does Apple require in a privacy policy?')">Privacy policy?</button>
+        <button class="qbtn" onclick="qp('How long does App Store review take?')">Review time?</button>
+        <button class="qbtn" onclick="qp('What are the most common App Store rejection reasons?')">Rejections?</button>
+      </div>
+      <div class="ai-input-row">
+        <textarea class="ai-inp" id="aiInp" placeholder="Ask about your launch…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+        <button class="ai-send" id="aiSend" onclick="sendMsg()">↑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const COLORS=['#378ADD','#7F77DD','#1D9E75','#D85A30','#D4537E','#BA7517','#639922','#E24B4A'];
+let projects={},activeId=null,editId=null,selColor=COLORS[0],aiHistory=[];
+
+const PHASES=[
+  {id:'p1',num:'01',title:'App Identity & Naming',sub:'Name, Bundle ID, domain & username availability',sections:[
+    {label:'Naming & Research',tasks:[
+      {id:'t1',text:'Decide on the final app name',hint:'Search App Store for conflicts. Check USPTO.gov for trademarks. Keep under 30 characters.',tag:'apple'},
+      {id:'t2',text:'Define your Bundle ID',hint:'Format: com.yourcompany.appname — lowercase, no spaces. Permanent after first submission.',tag:''},
+      {id:'t3',text:'Check domain availability for your app name',hint:'Check GoDaddy or Namecheap. Good to know what\'s available.',tag:''},
+      {id:'t4',text:'Check username availability across all social platforms',hint:'Use namechk.com — checks Instagram, TikTok, X, Facebook, YouTube at once.',tag:''},
+    ]}
+  ]},
+  {id:'p2',num:'02',title:'Gmail & Core Accounts',sub:'Dedicated email, 2FA, filters',sections:[
+    {label:'Gmail Setup',tasks:[
+      {id:'t5',text:'Create dedicated Gmail for this app',hint:'appname@gmail.com — anchors all your app accounts in one place.',tag:'gmail'},
+      {id:'t6',text:'Enable 2-Factor Authentication on the Gmail',hint:'Settings → Security → 2-Step Verification. Use Google Authenticator, not SMS.',tag:'gmail'},
+      {id:'t7',text:'Save recovery codes in a password manager',hint:'Use 1Password, Bitwarden, or Apple Keychain.',tag:''},
+      {id:'t8',text:'Set up Gmail labels: Apple Developer, GitHub, App Reviews',hint:'Keeps app communications organized from day one.',tag:'gmail'},
+    ]}
+  ]},
+  {id:'p3',num:'03',title:'GitHub & Privacy / Support Pages',sub:'Repo, GitHub Pages, required Apple URLs',sections:[
+    {label:'GitHub Account',tasks:[
+      {id:'t9',text:'Create GitHub account using your app Gmail',hint:'Enable 2FA immediately after signup.',tag:'github'},
+      {id:'t10',text:'Enable GitHub 2FA via Authenticator app',hint:'Settings → Password and authentication → Two-factor authentication.',tag:'github'},
+    ]},
+    {label:'Repository & Pages',tasks:[
+      {id:'t11',text:'Create public repo named: your-username.github.io',hint:'This exact naming activates GitHub Pages automatically. Initialize with README.',tag:'github'},
+      {id:'t12',text:'Create index.html — landing & support home page',hint:'App name, description, contact email, links to Privacy and Support pages.',tag:'github'},
+      {id:'t13',text:'Create privacy.html — Apple-required Privacy Policy',hint:'Must cover: data collected, usage, third parties, deletion rights, COPPA, contact info.',tag:'legal'},
+      {id:'t14',text:'Create support.html — Apple-required Support page',hint:'Contact email, FAQ, known issues. App rejected without working support URL.',tag:'legal'},
+      {id:'t15',text:'Enable GitHub Pages in repo Settings',hint:'Settings → Pages → Source: main branch / root → Save. Live in 2-5 min.',tag:'github'},
+      {id:'t16',text:'Verify all pages load and are mobile-friendly',hint:'Test on iPhone — Apple reviews on real devices.',tag:'github'},
+    ]}
+  ]},
+  {id:'p4',num:'04',title:'Social Media Setup',sub:'Instagram, TikTok, X, Facebook, YouTube, Reddit',sections:[
+    {label:'Account Creation',tasks:[
+      {id:'t17',text:'Create Instagram Business Account',hint:'Sign up → Professional → Business. Bio + GitHub Pages link + app icon as photo.',tag:'social'},
+      {id:'t18',text:'Create TikTok Business Account',hint:'business.tiktok.com — verify phone, add bio with GitHub Pages URL.',tag:'social'},
+      {id:'t19',text:'Create X (Twitter) account',hint:'Username must match app name exactly. Header image + app icon + website link.',tag:'social'},
+      {id:'t20',text:'Create Facebook Page (not personal account)',hint:'facebook.com/pages/create → Apps category. Required for Meta Ads.',tag:'social'},
+      {id:'t21',text:'Create YouTube Channel',hint:'Sign in with app Gmail → Create Channel → upload channel art.',tag:'social'},
+      {id:'t22',text:'Create Reddit account (optional)',hint:'Build karma before promoting. Consider r/YourAppName for community.',tag:'social'},
+    ]},
+    {label:'Cross-Platform Setup',tasks:[
+      {id:'t23',text:'Use identical username across all platforms',hint:'Consistency builds brand. Use _app suffix if exact name is taken somewhere.',tag:''},
+      {id:'t24',text:'Upload app icon as profile photo on all platforms',hint:'Export at each platform\'s required dimensions.',tag:''},
+      {id:'t25',text:'Set up Linktree / link-in-bio with all links',hint:'App Store, GitHub Pages, Privacy, Support, all social accounts.',tag:''},
+    ]}
+  ]},
+  {id:'p5',num:'05',title:'Apple Developer Account',sub:'Enrollment, agreements, certificates',sections:[
+    {label:'Developer Program',tasks:[
+      {id:'t26',text:'Create Apple ID for developer account',hint:'Use app Gmail at appleid.apple.com. 2FA is mandatory.',tag:'apple'},
+      {id:'t27',text:'Enroll in Apple Developer Program — $99/year',hint:'developer.apple.com → Join. Takes 24-48 hours for approval.',tag:'apple'},
+      {id:'t28',text:'Accept all agreements in App Store Connect',hint:'appstoreconnect.apple.com → Agreements, Tax, and Banking.',tag:'apple'},
+      {id:'t29',text:'Set up banking and tax info if monetizing',hint:'Required even for free apps with in-app purchases.',tag:'apple'},
+    ]},
+    {label:'Xcode & Certificates',tasks:[
+      {id:'t30',text:'Sign into Xcode with Apple ID under Settings → Accounts',hint:'Xcode auto-generates provisioning profiles and certificates.',tag:'apple'},
+      {id:'t31',text:'Register Bundle ID in Certificates, IDs & Profiles',hint:'developer.apple.com → Identifiers → + → App IDs → App.',tag:'apple'},
+      {id:'t32',text:'Enable only required App Capabilities',hint:'Reviewers flag capabilities enabled but unused.',tag:'apple'},
+    ]}
+  ]},
+  {id:'p6',num:'06',title:'App Store Connect Listing',sub:'Description, screenshots, URLs, privacy labels',sections:[
+    {label:'Create Listing',tasks:[
+      {id:'t33',text:'Create new app: App Store Connect → + → New App',hint:'Platform, Name, Language, Bundle ID, SKU (unique internal code).',tag:'apple'},
+      {id:'t34',text:'Write App Store Description (up to 4,000 chars)',hint:'First 3 lines show before "More" is tapped — make them count.',tag:'apple'},
+      {id:'t35',text:'Write Promotional Text (170 chars)',hint:'Can update without resubmission — good for events and sales.',tag:'apple'},
+      {id:'t36',text:'Write Keywords (100 chars, comma-separated)',hint:'No spaces after commas. Don\'t repeat app name. Research with AppFollow.',tag:'apple'},
+      {id:'t37',text:'Add Support URL — your GitHub Pages support.html',hint:'Required. Apple rejects without working support URL.',tag:'github'},
+      {id:'t38',text:'Add Privacy Policy URL — your GitHub Pages privacy.html',hint:'Required. Apple rejects without this.',tag:'legal'},
+    ]},
+    {label:'Visual Assets',tasks:[
+      {id:'t39',text:'Upload App Icon (1024×1024px PNG, no transparency)',hint:'No rounded corners — Apple adds them. No text unless it\'s your logo.',tag:'apple'},
+      {id:'t40',text:'Upload iPhone 6.9" screenshots (required)',hint:'1320×2868 or 1290×2796px. First screenshot is most important.',tag:'apple'},
+      {id:'t41',text:'Upload iPad 13" screenshots (required if universal app)',hint:'2064×2752 or 2048×2732px.',tag:'apple'},
+      {id:'t42',text:'Upload App Preview video (optional, recommended)',hint:'15-30 sec. Must show real app footage — no live-action ads.',tag:'apple'},
+    ]},
+    {label:'Pricing & Compliance',tasks:[
+      {id:'t43',text:'Set pricing (Free or paid tier)',hint:'Select Free if using in-app purchases.',tag:'apple'},
+      {id:'t44',text:'Set availability — select countries/regions',hint:'Default is all territories.',tag:'apple'},
+      {id:'t45',text:'Complete Age Rating questionnaire honestly',hint:'False ratings = rejection.',tag:'apple'},
+      {id:'t46',text:'Complete App Privacy nutrition labels',hint:'Declare every data type collected. Apple cross-checks with your Privacy Policy.',tag:'legal'},
+    ]}
+  ]},
+  {id:'p7',num:'07',title:'Build, TestFlight & Submission',sub:'Archive, validate, upload, submit for review',sections:[
+    {label:'Xcode Build',tasks:[
+      {id:'t47',text:'Set Version (1.0.0) and Build Number (1) in Xcode',hint:'Build number must be unique per upload.',tag:'apple'},
+      {id:'t48',text:'Set Signing to Automatically manage signing',hint:'Select your Team in project target settings.',tag:'apple'},
+      {id:'t49',text:'Archive: Xcode → Product → Archive',hint:'Set destination to "Any iOS Device" first, not a simulator.',tag:'apple'},
+      {id:'t50',text:'Validate archive in Organizer before uploading',hint:'Fix all errors. Common: missing icon sizes, entitlement issues.',tag:'apple'},
+      {id:'t51',text:'Distribute to App Store Connect via Organizer',hint:'Distribute App → App Store Connect → Upload. Processing: 10-30 min.',tag:'apple'},
+    ]},
+    {label:'TestFlight & Submission',tasks:[
+      {id:'t52',text:'Add internal testers in TestFlight (up to 100)',hint:'No review required for internal testers.',tag:'apple'},
+      {id:'t53',text:'Test all flows on real devices',hint:'Onboarding, core features, settings, IAP, notifications.',tag:'apple'},
+      {id:'t54',text:'Select build in App Store listing and add review notes',hint:'Provide test credentials if login required — no credentials = rejection.',tag:'apple'},
+      {id:'t55',text:'Choose Manual release, then Submit for Review',hint:'Manual = you control go-live timing. Avg review: 24-48 hours.',tag:'apple'},
+    ]}
+  ]},
+  {id:'p8',num:'08',title:'Post-Launch & Ongoing',sub:'Go live, announce, monitor, maintain',sections:[
+    {label:'Launch Day',tasks:[
+      {id:'t56',text:'Update GitHub Pages with live App Store link',hint:'Add official "Download on the App Store" badge from Apple\'s marketing guidelines.',tag:'github'},
+      {id:'t57',text:'Update all social media bios with App Store URL',hint:'Update Instagram, TikTok, X, Facebook, YouTube, and Linktree.',tag:'social'},
+      {id:'t58',text:'Post launch announcement on all platforms',hint:'Use #NewApp #iOS #iPhone hashtags.',tag:'social'},
+      {id:'t59',text:'Submit to Product Hunt, AppAdvice, AppShopper',hint:'Product Hunt = major exposure. Prepare assets 2 weeks in advance.',tag:''},
+    ]},
+    {label:'Ongoing',tasks:[
+      {id:'t60',text:'Monitor App Store Connect analytics weekly',hint:'Track: Impressions, Conversion Rate, Downloads, Crashes.',tag:'apple'},
+      {id:'t61',text:'Respond to App Store reviews within 24 hours',hint:'Public responses build trust.',tag:''},
+      {id:'t62',text:'Set annual renewal reminder for Apple Developer Program',hint:'Lapsed = apps removed from App Store.',tag:'apple'},
+    ]}
+  ]}
+];
+
+function totalTasks(){let n=0;PHASES.forEach(p=>p.sections.forEach(s=>n+=s.tasks.length));return n}
+function doneTasks(pid){return Object.values(projects[pid]?.tasks||{}).filter(Boolean).length}
+function nextTask(pid){
+  for(const ph of PHASES)for(const s of ph.sections)for(const t of s.tasks)
+    if(!projects[pid]?.tasks[t.id])return{phase:ph.title,task:t.text};
+  return null;
+}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function save(){try{localStorage.setItem('alt_v3',JSON.stringify({projects,activeId}))}catch(e){}}
+function load(){try{const d=localStorage.getItem('alt_v3');if(d){const p=JSON.parse(d);projects=p.projects||{};activeId=p.activeId||null}}catch(e){}}
+
+function openModal(editPid){
+  editId=editPid||null;
+  document.getElementById('modalTitle').textContent=editPid?'Edit Project':'New App Project';
+  document.getElementById('modalSave').textContent=editPid?'Save Changes':'Create Project';
+  const p=editPid?projects[editPid]:{};
+  document.getElementById('fName').value=p.name||'';
+  document.getElementById('fBundle').value=p.bundleId||'';
+  document.getElementById('fGithub').value=p.github||'';
+  document.getElementById('fGmail').value=p.gmail||'';
+  selColor=p.color||COLORS[0];
+  renderColors();
+  document.getElementById('modalWrap').classList.add('open');
+  setTimeout(()=>document.getElementById('fName').focus(),50);
+}
+
+function closeModal(){document.getElementById('modalWrap').classList.remove('open')}
+
+function renderColors(){
+  document.getElementById('colorRow').innerHTML=COLORS.map(c=>
+    `<div class="cswatch${c===selColor?' sel':''}" style="background:${c}" onclick="selColor='${c}';renderColors()"></div>`
+  ).join('');
+}
+
+function saveProject(){
+  const name=document.getElementById('fName').value.trim();
+  if(!name){document.getElementById('fName').focus();return}
+  if(editId){
+    const p=projects[editId];
+    p.name=name;p.bundleId=document.getElementById('fBundle').value.trim();
+    p.github=document.getElementById('fGithub').value.trim();
+    p.gmail=document.getElementById('fGmail').value.trim();
+    p.color=selColor;
+  } else {
+    const id='p'+Date.now();
+    projects[id]={id,name,bundleId:document.getElementById('fBundle').value.trim(),
+      github:document.getElementById('fGithub').value.trim(),
+      gmail:document.getElementById('fGmail').value.trim(),
+      color:selColor,tasks:{},notes:{}};
+    activeId=id;
+  }
+  save();closeModal();renderSidebar();renderChecklist();
+}
+
+function delProject(id,e){
+  e.stopPropagation();
+  if(!confirm('Delete this project?'))return;
+  delete projects[id];
+  if(activeId===id){const k=Object.keys(projects);activeId=k.length?k[0]:null}
+  save();renderSidebar();renderChecklist();
+}
+
+function selectProject(id){
+  activeId=id;save();renderSidebar();renderChecklist();
+  const p=projects[id];const done=doneTasks(id);const total=totalTasks();const next=nextTask(id);
+  const ctx=`Switched to **${p.name}** — ${done}/${total} tasks done.${next?` Next: "${next.task}" in ${next.phase}.`:' All complete!'}`;
+  addMsg('ai',ctx);
+}
+
+function renderSidebar(){
+  const keys=Object.keys(projects);
+  document.getElementById('globalStat').textContent=`${keys.length} project${keys.length!==1?'s':''}`;
+  const total=totalTasks();
+  document.getElementById('projList').innerHTML=keys.length?keys.map(id=>{
+    const p=projects[id];const done=doneTasks(id);const pct=total?Math.round(done/total*100):0;
+    return`<div class="proj-item${id===activeId?' active':''}" onclick="selectProject('${id}')">
+      <div class="proj-dot" style="background:${p.color}"></div>
+      <div class="proj-info"><div class="proj-name">${esc(p.name)}</div><div class="proj-pct">${done}/${total} · ${pct}%</div></div>
+      <button class="proj-del" onclick="delProject('${id}',event)">✕</button>
+    </div>`;
+  }).join(''):'<div class="sidebar-empty">No apps yet.<br>Click "+ New App" above.</div>';
+}
+
+function renderChecklist(){
+  const cl=document.getElementById('clContent');
+  const em=document.getElementById('emptyState');
+  if(!activeId||!projects[activeId]){cl.style.display='none';em.style.display='flex';return}
+  em.style.display='none';cl.style.display='block';
+  const p=projects[activeId];const total=totalTasks();const done=doneTasks(activeId);
+  const pct=total?Math.round(done/total*100):0;const next=nextTask(activeId);
+  let h=`<div class="proj-header">
+    <div class="proj-header-top">
+      <div class="proj-header-name">${esc(p.name)}</div>
+      <button class="btn btn-sm" onclick="openModal('${activeId}')">Edit</button>
+      <button class="btn btn-sm" onclick="exportProj()">Export</button>
+    </div>
+    ${p.bundleId||p.github||p.gmail?`<div class="proj-meta">
+      ${p.bundleId?`<div class="proj-meta-item"><div class="proj-meta-label">Bundle ID</div><div class="proj-meta-val">${esc(p.bundleId)}</div></div>`:''}
+      ${p.github?`<div class="proj-meta-item"><div class="proj-meta-label">GitHub</div><div class="proj-meta-val">${esc(p.github)}</div></div>`:''}
+      ${p.gmail?`<div class="proj-meta-item"><div class="proj-meta-label">Gmail</div><div class="proj-meta-val">${esc(p.gmail)}</div></div>`:''}
+    </div>`:''}
+    <div class="prog-row">
+      <div class="prog-track"><div class="prog-fill" id="progFill" style="width:${pct}%"></div></div>
+      <div class="prog-lbl" id="progLbl">${done}/${total} · ${pct}%</div>
+    </div>
+    ${next?`<div class="next-banner"><span>▶</span><div><strong>Next:</strong> ${esc(next.task)} <span style="opacity:0.65;font-size:10px">(${esc(next.phase)})</span></div></div>`:
+      done===total&&total>0?'<div class="next-banner" style="background:var(--color-background-success);border-color:var(--color-border-success);color:var(--color-text-success)">All tasks complete — ready to launch!</div>':''}
+  </div>`;
+
+  PHASES.forEach(ph=>{
+    const phDone=ph.sections.reduce((a,s)=>a+s.tasks.filter(t=>p.tasks[t.id]).length,0);
+    const phTotal=ph.sections.reduce((a,s)=>a+s.tasks.length,0);
+    const phPct=phTotal?Math.round(phDone/phTotal*100):0;
+    const complete=phDone===phTotal&&phTotal>0;
+    h+=`<div class="phase${complete?' closed':''}" id="ph_${ph.id}">
+      <div class="phase-hdr" onclick="togglePhase('${ph.id}')">
+        <div class="phase-num${complete?' done':''}">${complete?'✓':ph.num}</div>
+        <div class="phase-titles"><div class="phase-title">${ph.title}</div><div class="phase-sub">${ph.sub}</div></div>
+        <div class="phase-meta">${phDone}/${phTotal} · ${phPct}%</div>
+        <div class="phase-chev">▼</div>
+      </div>
+      <div class="phase-body">`;
+    ph.sections.forEach(sec=>{
+      h+=`<div class="sec-label">${sec.label}</div>`;
+      sec.tasks.forEach(t=>{
+        const isDone=!!p.tasks[t.id];
+        const note=p.notes&&p.notes[t.id]?p.notes[t.id]:'';
+        const tagHtml=t.tag?`<span class="tag tag-${t.tag}">${t.tag}</span>`:'';
+        h+=`<div class="task${isDone?' done':''}" id="tk_${t.id}">
+          <div class="chk" onclick="toggleTask('${t.id}')"><span class="chk-mark">✓</span></div>
+          <div class="task-body">
+            <div class="task-txt">${esc(t.text)}${tagHtml}</div>
+            <div class="task-hint">${esc(t.hint)}</div>
+            <div class="note-area" id="na_${t.id}">
+              <textarea class="note-input" id="ni_${t.id}" placeholder="Add your notes, URLs, credentials…" onblur="saveNote('${t.id}')">${esc(note)}</textarea>
+            </div>
+            <div class="note-saved${note?' vis':''}" id="ns_${t.id}">${note?'Note: '+esc(note):''}</div>
+          </div>
+          <button class="note-btn${note?' has':''}" id="nb_${t.id}" onclick="toggleNote('${t.id}')">${note?'Note':'+ Note'}</button>
+        </div>`;
+      });
+    });
+    h+=`</div></div>`;
+  });
+  cl.innerHTML=h;
+}
+
+function togglePhase(id){document.getElementById('ph_'+id).classList.toggle('closed')}
+
+function toggleTask(tid){
+  const p=projects[activeId];
+  p.tasks[tid]=!p.tasks[tid];
+  save();
+  const el=document.getElementById('tk_'+tid);
+  if(el){if(p.tasks[tid])el.classList.add('done');else el.classList.remove('done')}
+  const done=doneTasks(activeId);const total=totalTasks();const pct=total?Math.round(done/total*100):0;
+  const pf=document.getElementById('progFill');if(pf)pf.style.width=pct+'%';
+  const pl=document.getElementById('progLbl');if(pl)pl.textContent=`${done}/${total} · ${pct}%`;
+  PHASES.forEach(ph=>{
+    const phDone=ph.sections.reduce((a,s)=>a+s.tasks.filter(t=>p.tasks[t.id]).length,0);
+    const phTotal=ph.sections.reduce((a,s)=>a+s.tasks.length,0);
+    const complete=phDone===phTotal&&phTotal>0;
+    const phEl=document.getElementById('ph_'+ph.id);if(!phEl)return;
+    const numEl=phEl.querySelector('.phase-num');
+    if(numEl){numEl.textContent=complete?'✓':ph.num;if(complete)numEl.classList.add('done');else numEl.classList.remove('done')}
+    const metaEl=phEl.querySelector('.phase-meta');
+    if(metaEl)metaEl.textContent=`${phDone}/${phTotal} · ${Math.round(phDone/phTotal*100||0)}%`;
+    if(complete)phEl.classList.add('closed');
+  });
+  renderSidebar();
+}
+
+function toggleNote(tid){
+  const na=document.getElementById('na_'+tid);
+  const ns=document.getElementById('ns_'+tid);
+  if(na.classList.contains('open')){na.classList.remove('open');saveNote(tid)}
+  else{na.classList.add('open');if(ns)ns.classList.remove('vis');setTimeout(()=>document.getElementById('ni_'+tid)?.focus(),30)}
+}
+
+function saveNote(tid){
+  const ni=document.getElementById('ni_'+tid);if(!ni)return;
+  const val=ni.value.trim();
+  if(!projects[activeId].notes)projects[activeId].notes={};
+  projects[activeId].notes[tid]=val;save();
+  const na=document.getElementById('na_'+tid);if(na)na.classList.remove('open');
+  const ns=document.getElementById('ns_'+tid);
+  const nb=document.getElementById('nb_'+tid);
+  if(val){if(ns){ns.textContent='Note: '+val;ns.classList.add('vis')}if(nb){nb.textContent='Note';nb.classList.add('has')}}
+  else{if(ns)ns.classList.remove('vis');if(nb){nb.textContent='+ Note';nb.classList.remove('has')}}
+}
+
+function exportProj(){
+  const p=projects[activeId];const total=totalTasks();const done=doneTasks(activeId);
+  let txt=`APP LAUNCH TRACKER\n${'='.repeat(40)}\nApp: ${p.name}\n`;
+  if(p.bundleId)txt+=`Bundle ID: ${p.bundleId}\n`;
+  if(p.github)txt+=`GitHub: ${p.github}\n`;
+  if(p.gmail)txt+=`Gmail: ${p.gmail}\n`;
+  txt+=`Progress: ${done}/${total} (${Math.round(done/total*100)}%)\n\n`;
+  PHASES.forEach(ph=>{
+    txt+=`\n-- ${ph.title} --\n`;
+    ph.sections.forEach(s=>{
+      txt+=`  ${s.label}\n`;
+      s.tasks.forEach(t=>{
+        txt+=`  ${p.tasks[t.id]?'[x]':'[ ]'} ${t.text}\n`;
+        const note=p.notes&&p.notes[t.id];
+        if(note)txt+=`        Note: ${note}\n`;
+      });
+    });
+  });
+  const a=document.createElement('a');
+  a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(txt);
+  a.download=`${(p.name||'app').replace(/\s+/g,'-')}-checklist.txt`;a.click();
+}
+
+function buildSys(){
+  let s=`You are an expert iOS app launch assistant. Help developers publish to the App Store, set up GitHub Pages for privacy/support pages, create social media accounts, and navigate the full launch process. Be concise and practical. Use **bold** for key terms and \`code\` for technical strings.`;
+  if(activeId&&projects[activeId]){
+    const p=projects[activeId];const done=doneTasks(activeId);const total=totalTasks();const next=nextTask(activeId);
+    s+=`\n\nActive project: ${p.name}${p.bundleId?`, Bundle ID: ${p.bundleId}`:''}${p.github?`, GitHub: ${p.github}`:''}. Progress: ${done}/${total} tasks. Next: ${next?`"${next.task}" in ${next.phase}`:'all done!'}.`;
+  }
+  return s;
+}
+
+async function sendMsg(){
+  const inp=document.getElementById('aiInp');
+  const text=inp.value.trim();if(!text)return;
+  inp.value='';addMsg('me',text);
+  aiHistory.push({role:'user',content:text});
+  document.getElementById('aiSend').disabled=true;showTyping(true);
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:buildSys(),messages:aiHistory})
+    });
+    const d=await r.json();
+    const reply=d.content?.[0]?.text||'Sorry, try again.';
+    aiHistory.push({role:'assistant',content:reply});
+    showTyping(false);addMsg('ai',reply);
+  }catch(e){showTyping(false);addMsg('ai','Connection error. This AI assistant works within Claude.ai artifacts.');}
+  document.getElementById('aiSend').disabled=false;
+}
+
+function qp(t){document.getElementById('aiInp').value=t;sendMsg()}
+
+function addMsg(role,text){
+  const msgs=document.getElementById('aiMsgs');
+  const fmt=text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code style="font-family:var(--font-mono);background:var(--color-background-secondary);padding:1px 4px;border-radius:3px;font-size:10px">$1</code>').replace(/\n/g,'<br>');
+  const d=document.createElement('div');
+  d.className=`ai-msg ${role}`;
+  d.innerHTML=`<div class="ai-lbl">${role==='me'?'You':'Assistant'}</div><div class="ai-bubble">${fmt}</div>`;
+  const typing=document.getElementById('typingEl');
+  if(typing)msgs.insertBefore(d,typing);else msgs.appendChild(d);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function showTyping(show){
+  let el=document.getElementById('typingEl');
+  if(!el){el=document.createElement('div');el.id='typingEl';el.className='typing';el.innerHTML='<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';document.getElementById('aiMsgs').appendChild(el)}
+  if(show){el.classList.add('vis');document.getElementById('aiMsgs').scrollTop=99999}else el.classList.remove('vis');
+}
+
+load();renderColors();renderSidebar();renderChecklist();
+</script>
