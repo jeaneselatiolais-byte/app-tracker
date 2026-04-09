@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App Pre-Launch Marketing Tracker</title>
+<style>
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --bg-page:    #F2F0EC;
+  --bg-main:    #FFFFFF;
+  --bg-sidebar: #ECEAE5;
+  --bg-surface: #F7F6F3;
+  --bg-hover:   #EDEAE4;
+  --bg-danger:  #FEF2F2;
+  --txt-primary:   #1C1917;
+  --txt-secondary: #57534E;
+  --txt-muted:     #A8A29E;
+  --txt-danger:    #B91C1C;
+  --bdr-light:  rgba(0,0,0,0.08);
+  --bdr-mid:    rgba(0,0,0,0.14);
+  --bdr-strong: rgba(0,0,0,0.24);
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --accent: #2563EB;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); background: var(--bg-page); min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 28px 16px; }
+.tracker { display: flex; min-height: 600px; border: 1px solid var(--bdr-light); border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-main); width: 100%; max-width: 880px; box-shadow: 0 4px 32px rgba(0,0,0,0.10); }
+.sidebar { width: 200px; min-width: 200px; background: var(--bg-sidebar); border-right: 1px solid var(--bdr-light); display: flex; flex-direction: column; }
+.sidebar-header { padding: 16px 14px 11px; border-bottom: 1px solid var(--bdr-light); }
+.sidebar-title { font-size: 10px; font-weight: 600; color: var(--txt-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.app-list { flex: 1; overflow-y: auto; padding: 8px; }
+.app-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: var(--radius-md); cursor: pointer; margin-bottom: 2px; transition: background 0.12s; border: 1px solid transparent; }
+.app-item:hover { background: var(--bg-hover); }
+.app-item.active { background: var(--bg-main); border-color: var(--bdr-mid); }
+.app-emoji { font-size: 16px; flex-shrink: 0; }
+.app-info { flex: 1; min-width: 0; }
+.app-name { font-size: 13px; font-weight: 500; color: var(--txt-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-prog { font-size: 11px; color: var(--txt-muted); margin-top: 1px; }
+.del-btn { opacity: 0; font-size: 11px; background: none; border: none; cursor: pointer; padding: 2px 5px; border-radius: 4px; color: var(--txt-muted); flex-shrink: 0; }
+.app-item:hover .del-btn { opacity: 1; }
+.del-btn:hover { background: var(--bg-danger); color: var(--txt-danger); }
+.add-btn { margin: 8px; padding: 9px 12px; background: none; border: 1px dashed var(--bdr-mid); border-radius: var(--radius-md); cursor: pointer; font-size: 12px; color: var(--txt-secondary); font-family: var(--font-sans); transition: all 0.12s; text-align: center; }
+.add-btn:hover { background: var(--bg-main); color: var(--txt-primary); }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 48px; }
+.empty-icon { font-size: 36px; }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--txt-primary); }
+.empty-sub { font-size: 13px; color: var(--txt-secondary); text-align: center; line-height: 1.55; max-width: 240px; }
+.app-header { padding: 18px 22px 0; border-bottom: 1px solid var(--bdr-light); flex-shrink: 0; }
+.app-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.app-big-name { font-size: 17px; font-weight: 600; color: var(--txt-primary); }
+.app-date { font-size: 12px; color: var(--txt-muted); margin-top: 1px; }
+.overall-bar-wrap { margin-bottom: 14px; }
+.overall-label { display: flex; justify-content: space-between; margin-bottom: 7px; }
+.overall-label span:first-child { font-size: 12px; color: var(--txt-secondary); }
+.overall-label span:last-child { font-size: 12px; font-weight: 600; color: var(--txt-primary); }
+.bar-track { height: 6px; background: var(--bdr-light); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+.view-tabs { display: flex; }
+.view-tab { padding: 9px 18px; font-size: 13px; font-weight: 500; color: var(--txt-secondary); cursor: pointer; border: none; background: none; font-family: var(--font-sans); border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.15s; }
+.view-tab:hover { color: var(--txt-primary); }
+.view-tab.active { color: var(--txt-primary); border-bottom-color: var(--tab-accent, var(--accent)); }
+.ai-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #16A34A; margin-left: 5px; vertical-align: middle; }
+.phase-tabs { display: flex; overflow-x: auto; flex-shrink: 0; padding: 0 22px; background: var(--bg-surface); border-bottom: 1px solid var(--bdr-light); }
+.phase-tab { padding: 7px 11px; font-size: 11px; font-weight: 600; color: var(--txt-muted); cursor: pointer; border: none; background: none; font-family: var(--font-sans); border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.15s; margin-bottom: -1px; letter-spacing: 0.01em; }
+.phase-tab:hover { color: var(--txt-primary); }
+.phase-tab.active { color: var(--txt-primary); border-bottom-color: var(--ph-color); }
+.phase-badge { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 8px; font-size: 9px; font-weight: 700; margin-left: 5px; }
+.content { flex: 1; overflow-y: auto; padding: 18px 22px; }
+.phase-summary { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--bdr-light); margin-bottom: 14px; }
+.phase-summary-text { font-size: 13px; color: var(--txt-secondary); flex: 1; }
+.phase-summary-text strong { color: var(--txt-primary); font-weight: 600; }
+.phase-summary-count { font-size: 12px; font-weight: 600; }
+.phase-section { margin-bottom: 8px; border: 1px solid var(--bdr-light); border-radius: var(--radius-md); overflow: hidden; }
+.section-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg-surface); cursor: pointer; user-select: none; transition: background 0.12s; border: none; width: 100%; text-align: left; font-family: var(--font-sans); }
+.section-header:hover { background: var(--bg-hover); }
+.section-title { font-size: 12px; font-weight: 600; color: var(--txt-primary); letter-spacing: 0.01em; flex: 1; }
+.section-meta { font-size: 11px; color: var(--txt-muted); font-weight: 500; }
+.section-chevron { width: 14px; height: 14px; flex-shrink: 0; transition: transform 0.2s ease; color: var(--txt-muted); }
+.section-chevron.open { transform: rotate(90deg); }
+.section-items { border-top: 1px solid var(--bdr-light); overflow: hidden; max-height: 0; transition: max-height 0.28s ease; }
+.section-items.open { max-height: 2000px; }
+.check-item { display: flex; align-items: flex-start; gap: 11px; padding: 9px 14px; border-bottom: 1px solid var(--bdr-light); cursor: pointer; transition: background 0.1s; }
+.check-item:last-child { border-bottom: none; }
+.check-item:hover { background: var(--bg-surface); }
+.check-box { width: 17px; height: 17px; min-width: 17px; border-radius: 5px; border: 1.5px solid var(--bdr-mid); background: none; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+.check-text { font-size: 13.5px; color: var(--txt-primary); line-height: 1.5; }
+.check-text.done { color: var(--txt-muted); text-decoration: line-through; }
+.ai-panel { padding: 18px 22px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.ai-desc { font-size: 13px; color: var(--txt-secondary); line-height: 1.65; padding: 12px 14px; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--bdr-light); }
+.ai-generate-area { display: flex; flex-direction: column; gap: 10px; }
+.ai-context-row { display: flex; gap: 10px; align-items: flex-end; }
+.ai-context-col { flex: 1; }
+.ai-context-label { font-size: 11px; color: var(--txt-muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; display: block; }
+.ai-context-col input, .ai-context-col select { width: 100%; padding: 8px 11px; font-size: 13px; font-family: var(--font-sans); color: var(--txt-primary); background: var(--bg-surface); border: 1px solid var(--bdr-mid); border-radius: var(--radius-md); outline: none; transition: border 0.15s; }
+.ai-context-col input:focus, .ai-context-col select:focus { border-color: var(--accent); }
+.ai-gen-btn { padding: 9px 18px; background: var(--accent); border: none; border-radius: var(--radius-md); font-size: 13px; font-family: var(--font-sans); color: white; cursor: pointer; font-weight: 600; align-self: flex-start; display: flex; align-items: center; gap: 7px; transition: opacity 0.15s; }
+.ai-gen-btn:hover { opacity: 0.88; }
+.ai-gen-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.ai-results { display: flex; flex-direction: column; gap: 8px; }
+.ai-insight-card { background: var(--bg-surface); border: 1px solid var(--bdr-light); border-radius: var(--radius-md); padding: 13px 15px; }
+.ai-insight-header { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+.ai-cat-badge { font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 20px; flex-shrink: 0; letter-spacing: 0.02em; }
+.ai-insight-title { font-size: 13px; font-weight: 600; color: var(--txt-primary); }
+.ai-insight-body { font-size: 13px; color: var(--txt-secondary); line-height: 1.65; }
+.ai-loading { display: flex; align-items: center; gap: 12px; padding: 20px 0; }
+.ai-spinner { width: 16px; height: 16px; border: 2px solid var(--bdr-mid); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.ai-loading-text { font-size: 13px; color: var(--txt-secondary); }
+.ai-error { font-size: 13px; color: var(--txt-danger); padding: 12px 14px; background: var(--bg-danger); border-radius: var(--radius-md); border: 1px solid rgba(185,28,28,0.15); }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 10; }
+.modal { background: var(--bg-main); border: 1px solid var(--bdr-mid); border-radius: var(--radius-lg); padding: 22px; width: 292px; box-shadow: 0 8px 40px rgba(0,0,0,0.18); }
+.modal-title { font-size: 15px; font-weight: 600; color: var(--txt-primary); margin-bottom: 18px; }
+.modal-field { margin-bottom: 14px; }
+.modal-label { font-size: 12px; color: var(--txt-secondary); margin-bottom: 7px; display: block; font-weight: 500; }
+.modal input { width: 100%; padding: 9px 11px; font-size: 14px; font-family: var(--font-sans); color: var(--txt-primary); background: var(--bg-surface); border: 1px solid var(--bdr-mid); border-radius: var(--radius-md); outline: none; transition: border 0.15s; }
+.modal input:focus { border-color: var(--accent); }
+.emoji-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.emoji-opt { width: 34px; height: 34px; font-size: 17px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); border: 1px solid transparent; cursor: pointer; transition: all 0.1s; }
+.emoji-opt:hover { background: var(--bg-surface); }
+.emoji-opt.sel { border-color: var(--accent); background: var(--bg-surface); }
+.modal-actions { display: flex; gap: 9px; margin-top: 18px; }
+.btn-cancel { flex: 1; padding: 9px; background: none; border: 1px solid var(--bdr-mid); border-radius: var(--radius-md); font-size: 13px; font-family: var(--font-sans); color: var(--txt-secondary); cursor: pointer; font-weight: 500; transition: background 0.12s; }
+.btn-cancel:hover { background: var(--bg-surface); }
+.btn-create { flex: 1; padding: 9px; background: var(--accent); border: none; border-radius: var(--radius-md); font-size: 13px; font-family: var(--font-sans); color: white; cursor: pointer; font-weight: 600; transition: opacity 0.12s; }
+.btn-create:hover { opacity: 0.88; }
+.btn-create:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const PHASES = [
+  { id:'prelaunch', phase:'Pre-Launch', days:'Days -30 to 0', color:'#0D9488',
+    sections:[
+      { title:'App Store Preparation', items:[
+        {id:'a1',text:'Finalize app name (30 char max)'},{id:'a2',text:'Write subtitle (30 char max)'},{id:'a3',text:'Write keyword field (100 char max)'},{id:'a4',text:'Write full description (4,000 char max)'},{id:'a5',text:'Write promotional text (170 char max)'},{id:'a6',text:'Design app icon (1024×1024px)'},{id:'a7',text:'Create screenshots for all device sizes'},{id:'a8',text:'Create App Preview video'},{id:'a9',text:'Choose primary & secondary categories'},{id:'a10',text:'Set age rating & content advisories'},{id:'a11',text:'Set pricing & availability (all regions)'},{id:'a12',text:'Create support URL & privacy policy page'},
+      ]},
+      { title:'Social & Community Setup', items:[
+        {id:'b1',text:'Optimize X (Twitter) profile for the app'},{id:'b2',text:'Create TikTok account'},{id:'b3',text:'Set up Instagram account'},{id:'b4',text:'Identify 5+ key subreddits for your audience'},{id:'b5',text:'Build email waitlist with landing page'},{id:'b6',text:'Set up link-in-bio'},
+      ]},
+      { title:'Content Pre-Production', items:[
+        {id:'c1',text:'Create teaser / announcement post'},{id:'c2',text:'Record build-in-public behind-the-scenes content'},{id:'c3',text:'Write launch announcement blog post'},{id:'c4',text:'Produce launch day video (YouTube / TikTok)'},{id:'c5',text:'Design promotional graphics & social assets'},
+      ]},
+      { title:'Press & Outreach', items:[
+        {id:'d1',text:'Write press release'},{id:'d2',text:'Build list: AppAdvice, MacStories, 9to5Mac'},{id:'d3',text:'Identify podcast hosts in your niche'},{id:'d4',text:'Reach out to influencers & early adopters'},
+      ]},
+      { title:'Beta Testing', items:[
+        {id:'e1',text:'Set up TestFlight internal testing'},{id:'e2',text:'Recruit 20+ external beta testers'},{id:'e3',text:'Collect & prioritize beta feedback'},{id:'e4',text:'Fix critical bugs from beta round'},
+      ]},
+    ]
+  },
+  { id:'launch', phase:'Launch Week', days:'Days 1–7', color:'#7C3AED',
+    sections:[
+      { title:'App Store', items:[
+        {id:'f1',text:'Submit app to App Store for review'},{id:'f2',text:'Monitor crash reports in Xcode Organizer'},{id:'f3',text:'Track keyword rankings in App Store Connect'},{id:'f4',text:'Respond to every early App Store review'},
+      ]},
+      { title:'Launch Announcements', items:[
+        {id:'g1',text:'Publish launch post on X / Twitter'},{id:'g2',text:'Post launch reel on TikTok & Instagram'},{id:'g3',text:'Publish launch video on YouTube'},{id:'g4',text:'Email your waitlist'},{id:'g5',text:'Submit & post on Product Hunt'},{id:'g6',text:'Post in all relevant subreddits'},{id:'g7',text:'DM beta testers requesting App Store reviews'},{id:'g8',text:'Send download codes to app review sites'},{id:'g9',text:'Post "Day 1 results" story / update'},
+      ]},
+    ]
+  },
+  { id:'postlaunch', phase:'Post-Launch', days:'Days 8–30', color:'#D97706',
+    sections:[
+      { title:'Analysis', items:[
+        {id:'h1',text:'Analyze Week 1 metrics (downloads, revenue, retention)'},{id:'h2',text:'Analyze keyword performance & iterate'},{id:'h3',text:'Identify top acquisition channels'},
+      ]},
+      { title:'App Store Optimization', items:[
+        {id:'i1',text:'A/B test screenshots in App Store Connect'},{id:'i2',text:'Respond to every App Store review'},{id:'i3',text:'Submit first bug fix / polish update'},
+      ]},
+      { title:'Marketing', items:[
+        {id:'j1',text:'Continue posting 3×/week on all social channels'},{id:'j2',text:'Pitch to relevant podcasts'},{id:'j3',text:'Post "first month results" transparency content'},{id:'j4',text:'Submit to app directories (AppShopper, AlternativeTo)'},{id:'j5',text:'Set up Apple Search Ads basic campaign'},{id:'j6',text:'Pitch to newsletter curators (iOS Dev Weekly, etc.)'},
+      ]},
+    ]
+  },
+  { id:'growth', phase:'Growth', days:'Days 31–60', color:'#16A34A',
+    sections:[
+      { title:'ASO & Product', items:[
+        {id:'k1',text:'Revise ASO metadata based on 30-day data'},{id:'k2',text:'Plan first major feature update from user feedback'},{id:'k3',text:'Set up push notification re-engagement campaign'},
+      ]},
+      { title:'Paid & Partnerships', items:[
+        {id:'l1',text:'Scale Apple Search Ads (optimize bids & keywords)'},{id:'l2',text:'Run a limited-time promotional price or sale'},{id:'l3',text:'Cross-promote with complementary indie apps'},{id:'l4',text:'Apply for App Store featuring via App Store Connect'},
+      ]},
+      { title:'Content & Community', items:[
+        {id:'m1',text:'Create "how to use" tutorial content series'},{id:'m2',text:'Gather power user case studies / testimonials'},{id:'m3',text:'Submit for Apple Design Awards (if eligible)'},{id:'m4',text:'Create SEO comparison / alternative content'},
+      ]},
+    ]
+  },
+  { id:'scale', phase:'Scale', days:'Days 61–90', color:'#DC2626',
+    sections:[
+      { title:'Product & Store', items:[
+        {id:'n1',text:'Launch first major feature update (v1.1+)'},{id:'n2',text:'Follow up on App Store featuring pitch'},{id:'n3',text:'Analyze 90-day cohort (retention, LTV, churn)'},{id:'n4',text:'Build v2 roadmap based on user input'},
+      ]},
+      { title:'Content & Retrospective', items:[
+        {id:'o1',text:'Write 90-day retrospective blog post'},{id:'o2',text:'Create "90-day lessons" YouTube video'},{id:'o3',text:'Submit to additional award programs'},{id:'o4',text:'Document long-term content & growth strategy'},
+      ]},
+    ]
+  }
+];
+
+const ALL_IDS = PHASES.flatMap(p=>p.sections.flatMap(s=>s.items.map(i=>i.id)));
+const TOTAL = ALL_IDS.length;
+const EMOJIS = ['📱','🚀','⭐','🎯','💡','🔥','🌟','💎','🎮','🎵','📸','🌿','🏆','⚡','🎨'];
+const CAT_COLORS = {
+  'ASO':      ['#CCFBF1','#0F766E'], 'Content':  ['#EDE9FE','#6D28D9'],
+  'Community':['#FEF3C7','#92400E'], 'Paid':     ['#DCFCE7','#166534'],
+  'PR':       ['#FEE2E2','#991B1B'], 'Analytics':['#DBEAFE','#1E40AF'],
+  'Strategy': ['#FCE7F3','#9D174D'], 'General':  ['#F3F4F6','#374151']
+};
+
+let state = {
+  apps:[], checks:{}, selectedId:null, activePhase:'prelaunch',
+  activeView:'checklist', showModal:false, newName:'', newEmoji:'📱',
+  aiState:'idle', aiResults:[], aiAppType:'', aiPhaseOverride:'', aiStream:'',
+  collapsed:{}
+};
+
+function loadData() {
+  try {
+    const a=localStorage.getItem('mktr3_apps'), c=localStorage.getItem('mktr3_checks'), col=localStorage.getItem('mktr3_collapsed');
+    if(a) state.apps=JSON.parse(a);
+    if(c) state.checks=JSON.parse(c);
+    if(col) state.collapsed=JSON.parse(col);
+  } catch(e) {}
+  render();
+}
+
+function saveData() {
+  try {
+    localStorage.setItem('mktr3_apps',JSON.stringify(state.apps));
+    localStorage.setItem('mktr3_checks',JSON.stringify(state.checks));
+    localStorage.setItem('mktr3_collapsed',JSON.stringify(state.collapsed));
+  } catch(e) {}
+}
+
+function getProgress(appId,phaseId) {
+  const phase=PHASES.find(p=>p.id===phaseId); if(!phase) return {checked:0,total:0};
+  const items=phase.sections.flatMap(s=>s.items);
+  return {checked:items.filter(i=>state.checks[appId+'-'+i.id]).length, total:items.length};
+}
+function getTotal(appId) { return {checked:ALL_IDS.filter(id=>state.checks[appId+'-'+id]).length, total:TOTAL}; }
+function pct(n,t) { return t===0?0:Math.round((n/t)*100); }
+
+function colKey(appId,phaseId,sec) { return appId+'|'+phaseId+'|'+sec; }
+function toggleSection(appId,phaseId,sec) { const k=colKey(appId,phaseId,sec); state.collapsed[k]=!state.collapsed[k]; saveData(); render(); }
+function isSectionOpen(appId,phaseId,sec) { return state.collapsed[colKey(appId,phaseId,sec)]!==true; }
+
+async function generateAI() {
+  const app=state.apps.find(a=>a.id===state.selectedId); if(!app) return;
+  state.aiState='loading'; state.aiResults=[]; render();
+  const phaseName=state.aiPhaseOverride||PHASES.find(p=>p.id===state.activePhase)?.phase||'Pre-Launch';
+  const {checked,total}=getTotal(app.id);
+  const prompt=`You are an expert iOS app marketing strategist specializing in indie developer launches.\n\nApp: "${app.name}" (${state.aiAppType||app.name})\nMarketing phase: ${phaseName}\nChecklist progress: ${checked}/${total} tasks completed\n\nGenerate 5 creative, specific, high-impact marketing ideas that an indie iOS developer would NOT typically think of for this phase. Go well beyond standard advice.\n\nRespond ONLY with valid JSON — no markdown, no backticks, no preamble:\n{"insights":[{"title":"...","category":"ASO|Content|Community|Paid|PR|Analytics|Strategy","body":"2-3 sentence specific, actionable tip"}]}`;
+  try {
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    const text=data.content?.find(b=>b.type==='text')?.text||'';
+    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+    state.aiResults=parsed.insights||[]; state.aiState='done';
+  } catch(e) { state.aiState='error'; state.aiStream=e.message||'Something went wrong.'; }
+  render();
+}
+
+function chevron(open) {
+  return `<svg class="section-chevron ${open?'open':''}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 3 11 8 6 13"/></svg>`;
+}
+
+function render() {
+  const root=document.getElementById('root');
+  const app=state.apps.find(a=>a.id===state.selectedId);
+  const phase=PHASES.find(p=>p.id===state.activePhase);
+
+  const sidebarItems=state.apps.map(a=>{
+    const {checked,total}=getTotal(a.id);
+    return `<div class="app-item ${a.id===state.selectedId?'active':''}" onclick="selectApp('${a.id}')">
+      <span class="app-emoji">${a.emoji}</span>
+      <div class="app-info"><div class="app-name">${a.name}</div><div class="app-prog">${pct(checked,total)}% complete</div></div>
+      <button class="del-btn" onclick="event.stopPropagation();delApp('${a.id}')">✕</button>
+    </div>`;
+  }).join('')||'<div style="padding:12px 10px;font-size:12px;color:var(--txt-muted)">No apps yet</div>';
+
+  let mainContent='';
+  if(!app) {
+    mainContent=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No app selected</div><div class="empty-sub">Add an app from the sidebar to start tracking your 90-day launch checklist.</div></div>`;
+  } else {
+    const {checked:tc,total:tt}=getTotal(app.id);
+    const barColor=phase?.color||'#2563EB';
+    const isChecklist=state.activeView==='checklist';
+    const {checked:phC,total:phT}=getProgress(app.id,state.activePhase);
+    const phColor=phase?.color||'#2563EB';
+
+    const phaseTabs=PHASES.map(ph=>{
+      const {checked:pc}=getProgress(app.id,ph.id);
+      const phItems=ph.sections.flatMap(s=>s.items).length;
+      const done=pc===phItems;
+      return `<button class="phase-tab ${ph.id===state.activePhase?'active':''}" style="--ph-color:${ph.color}" onclick="setPhase('${ph.id}')">
+        ${ph.phase}<span class="phase-badge" style="background:${done?ph.color+'22':'var(--bdr-light)'};color:${done?ph.color:'var(--txt-muted)'}">${pc}</span>
+      </button>`;
+    }).join('');
+
+    let viewContent='';
+    if(isChecklist) {
+      const sections=phase?.sections.map(sec=>{
+        const open=isSectionOpen(app.id,state.activePhase,sec.title);
+        const secChecked=sec.items.filter(i=>state.checks[app.id+'-'+i.id]).length;
+        const escapedTitle=sec.title.replace(/'/g,"\\'");
+        const items=sec.items.map(item=>{
+          const key=app.id+'-'+item.id; const done=!!state.checks[key];
+          return `<div class="check-item" onclick="toggle('${key}')">
+            <div class="check-box" style="${done?'background:'+phColor+';border-color:'+phColor:''}">
+              ${done?'<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5 5 4 7.5 8.5 2.5"/></svg>':''}
+            </div>
+            <span class="check-text ${done?'done':''}">${item.text}</span>
+          </div>`;
+        }).join('');
+        return `<div class="phase-section">
+          <button class="section-header" onclick="toggleSection('${app.id}','${state.activePhase}','${escapedTitle}')">
+            ${chevron(open)}<span class="section-title">${sec.title}</span>
+            <span class="section-meta">${secChecked} / ${sec.items.length}</span>
+          </button>
+          <div class="section-items ${open?'open':''}">${items}</div>
+        </div>`;
+      }).join('');
+
+      viewContent=`
+        <div class="phase-tabs">${phaseTabs}</div>
+        <div class="content">
+          <div class="phase-summary">
+            <span class="phase-summary-text"><strong>${phase?.phase||''}</strong> &nbsp;·&nbsp; ${phase?.days||''}</span>
+            <span class="phase-summary-count" style="color:${phColor}">${phC} / ${phT} done</span>
+          </div>
+          ${sections}
+        </div>`;
+    } else {
+      const phaseOptions=PHASES.map(p=>`<option value="${p.phase}" ${state.aiPhaseOverride===p.phase?'selected':''}>${p.phase}</option>`).join('');
+      let resultsHtml='';
+      if(state.aiState==='loading') {
+        resultsHtml=`<div class="ai-loading"><div class="ai-spinner"></div><span class="ai-loading-text">Generating ideas for <strong>${app.name}</strong>…</span></div>`;
+      } else if(state.aiState==='error') {
+        resultsHtml=`<div class="ai-error">Error: ${state.aiStream}</div>`;
+      } else if(state.aiState==='done'&&state.aiResults.length) {
+        resultsHtml=`<div class="ai-results">${state.aiResults.map(ins=>{
+          const [bg,fg]=CAT_COLORS[ins.category]||CAT_COLORS['General'];
+          return `<div class="ai-insight-card"><div class="ai-insight-header"><span class="ai-cat-badge" style="background:${bg};color:${fg}">${ins.category}</span><span class="ai-insight-title">${ins.title}</span></div><div class="ai-insight-body">${ins.body}</div></div>`;
+        }).join('')}</div>`;
+      }
+      viewContent=`
+        <div class="ai-panel">
+          <div class="ai-desc">Describe your app and choose a phase — Claude will surface <strong>5 high-impact ideas</strong> you may not have thought of, tailored to your niche and stage.</div>
+          <div class="ai-generate-area">
+            <div class="ai-context-row">
+              <div class="ai-context-col">
+                <label class="ai-context-label">App type / niche</label>
+                <input type="text" placeholder="e.g. habit tracker, cooking converter…" value="${state.aiAppType}" oninput="state.aiAppType=this.value" />
+              </div>
+              <div class="ai-context-col" style="max-width:138px">
+                <label class="ai-context-label">Phase</label>
+                <select onchange="state.aiPhaseOverride=this.value"><option value="">Current phase</option>${phaseOptions}</select>
+              </div>
+            </div>
+            <button class="ai-gen-btn" onclick="generateAI()" ${state.aiState==='loading'?'disabled':''}>
+              ${state.aiState==='loading'?'<div class="ai-spinner" style="border-top-color:white;width:14px;height:14px;border-width:2px"></div> Generating…':'✦ Generate ideas'}
+            </button>
+          </div>
+          ${resultsHtml}
+        </div>`;
+    }
+
+    mainContent=`
+      <div class="app-header">
+        <div class="app-title-row">
+          <span style="font-size:22px">${app.emoji}</span>
+          <div><div class="app-big-name">${app.name}</div><div class="app-date">Added ${app.createdAt}</div></div>
+        </div>
+        <div class="overall-bar-wrap">
+          <div class="overall-label"><span>Overall progress</span><span>${tc} / ${tt} tasks &nbsp;·&nbsp; ${pct(tc,tt)}%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct(tc,tt)}%;background:${barColor}"></div></div>
+        </div>
+        <div class="view-tabs">
+          <button class="view-tab ${isChecklist?'active':''}" style="--tab-accent:${barColor}" onclick="setView('checklist')">Checklist</button>
+          <button class="view-tab ${!isChecklist?'active':''}" style="--tab-accent:#16A34A" onclick="setView('ai')">AI insights<span class="ai-dot"></span></button>
+        </div>
+      </div>
+      ${viewContent}`;
+  }
+
+  const modal=state.showModal?`<div class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">Add new app</div>
+      <div class="modal-field"><label class="modal-label">App name</label><input id="nameInput" type="text" placeholder="e.g. Tethyr, KitchenKit…" value="${state.newName}" oninput="state.newName=this.value" onkeydown="if(event.key==='Enter')createApp()" /></div>
+      <div class="modal-field"><label class="modal-label">Icon</label><div class="emoji-grid">${EMOJIS.map(e=>`<div class="emoji-opt ${e===state.newEmoji?'sel':''}" onclick="setEmoji('${e}')">${e}</div>`).join('')}</div></div>
+      <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-create" onclick="createApp()">Add app</button></div>
+    </div>
+  </div>`:'';
+
+  root.innerHTML=`<div class="tracker"><div class="sidebar"><div class="sidebar-header"><div class="sidebar-title">My apps</div></div><div class="app-list">${sidebarItems}</div><button class="add-btn" onclick="showModal()">+ Add app</button></div><div class="main">${mainContent}</div>${modal}</div>`;
+  if(state.showModal) setTimeout(()=>{ document.getElementById('nameInput')?.focus(); },50);
+}
+
+function selectApp(id) { state.selectedId=id; state.activePhase='prelaunch'; state.activeView='checklist'; state.aiState='idle'; state.aiResults=[]; render(); }
+function setPhase(id) { state.activePhase=id; render(); }
+function setView(v) { state.activeView=v; render(); }
+function toggle(key) { state.checks[key]=!state.checks[key]; saveData(); render(); }
+function showModal() { state.showModal=true; state.newName=''; state.newEmoji='📱'; render(); }
+function closeModal(e) { if(!e||e.target.classList.contains('modal-overlay')){ state.showModal=false; render(); } }
+function setEmoji(e) { state.newEmoji=e; render(); }
+function createApp() {
+  if(!state.newName.trim()) return;
+  const a={id:Date.now().toString(),name:state.newName.trim(),emoji:state.newEmoji,createdAt:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})};
+  state.apps.push(a); state.selectedId=a.id; state.activePhase='prelaunch'; state.activeView='checklist'; state.showModal=false; saveData(); render();
+}
+function delApp(id) {
+  state.apps=state.apps.filter(a=>a.id!==id);
+  Object.keys(state.checks).forEach(k=>{ if(k.startsWith(id+'-')) delete state.checks[k]; });
+  if(state.selectedId===id) state.selectedId=state.apps[0]?.id||null;
+  saveData(); render();
+}
+
+loadData();
+</script>
+</body>
+</html>
